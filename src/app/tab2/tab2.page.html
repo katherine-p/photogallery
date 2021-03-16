@@ -1,17 +1,36 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Tab 2
+      About Us
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Play a Game!</ion-card-title>
+    </ion-card-header>
+  
+    <ion-card-content>
+      C14180221 - Katherine Putri Sutjiadi <br>
+      Let's play a game! Input a number and we'll tell you if you win:)<br><br>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+      
+      <ion-item>
+        <ion-label position="floating">Input number (1-20)</ion-label>
+        <ion-input [(ngModel)]="num"></ion-input>        
+      </ion-item>
+      <ion-button size="small" (click)="ceknum()">GO!</ion-button>
+      <br>
+
+      <div *ngIf="cek == 1; then showwin"></div>
+
+      <ng-template #showwin>
+        <img src="https://yt3.ggpht.com/ytc/AAUvwnjR3FW5U7IFZN1PRNbsAJrZlc-yX5nAwpD90NACXg=s900-c-k-c0x00ffffff-no-rj" alt="" width="200" height="200">
+      </ng-template>
+    </ion-card-content>
+  </ion-card>
+  
+  
 </ion-content>
