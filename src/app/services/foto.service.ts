@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CameraResultType, CameraSource, FilesystemDirectory, Plugins, CameraPhoto, Capacitor } from '@capacitor/core';
+import { CameraPhoto, CameraResultType, CameraSource, Capacitor, FilesystemDirectory, Plugins } from '@capacitor/core';
 import { Platform } from '@ionic/angular';
 
 
@@ -10,82 +10,84 @@ const { Camera, Filesystem, Storage } = Plugins;
 })
 export class FotoService {
 
-  public dataFoto : Photo[] = [];
+  public dataFoto : Photo[] =[];
   private keyFoto : string = "foto";
   private platform : Platform;
-
 
   constructor(platform: Platform) 
   { 
     this.platform = platform;
   }
 
-  public async tambahfoto()
+  public async tambahFoto()
   {
-    const foto = await Camera.getPhoto({
+    const Foto = await Camera.getPhoto ({
       resultType : CameraResultType.Uri,
       source : CameraSource.Camera,
-      quality : 100
+      quality:100
     });
-    console.log(foto);
+    console.log(Foto);
 
-    this.dataFoto.unshift({
-      filePath : "Load",
-      webviewPath : foto.webPath
-    });
+    const fileFoto = await this.simpanFoto(Foto);
+
+    this.dataFoto.unshift(fileFoto);
 
     Storage.set({
       key : this.keyFoto,
-      value : JSON.stringify(this.dataFoto)
+      value: JSON.stringify(this.dataFoto)
     });
   }
 
-  public async simpanfoto(foto : CameraPhoto)
+  public async simpanFoto(foto : CameraPhoto)
   {
     const base64Data = await this.readAsBase64(foto);
 
-    const namaFile = new Date().getTime + ".jpeg";
-
+    const namaFile = new Date().getTime()+'.jpeg';
     const simpanFile = await Filesystem.writeFile({
       path : namaFile,
       data : base64Data,
       directory : FilesystemDirectory.Data
     });
 
+    const response = await fetch(foto.webPath);
+    const blob = await response.blob();
+    const dataFoto = new File([blob], foto.path, {
+      type: "image/jpeg"
+    });
+
     if(this.platform.is('hybrid'))
     {
-      return{
+      return {
         filePath : simpanFile.uri,
-        webviewPath : Capacitor.convertFileSrc(simpanFile.uri)
+        webviewPath : Capacitor.convertFileSrc(simpanFile.uri),
+        dataImage : dataFoto
       }
     }
     else
     {
       return {
         filePath : namaFile,
-        webviewPath : foto.webPath
+        webviewPath : foto.webPath,
+        dataImage : dataFoto
       }
     }
-
-    
   }
 
-  private async readAsBase64(foto : CameraPhoto)
+  private async readAsBase64(foto : CameraPhoto) //convert foto jd base64
   {
-    if(this.platform.is('hybrid'))
-    {
+    if (this.platform.is('hybrid')){
       const file = await Filesystem.readFile({
-        path : foto.path
+        path: foto.path
       });
       return file.data;
-    }
-    else
+    } 
+    else 
     {
       const response = await fetch(foto.webPath);
       const blob = await response.blob();
 
       return await this.convertBlobToBase64(blob) as string;
-    }    
+    }
   }
 
   convertBlobToBase64 = (blob : Blob) => new Promise((resolve, reject) => {
@@ -102,26 +104,31 @@ export class FotoService {
     const listFoto = await Storage.get({key: this.keyFoto});
     this.dataFoto = JSON.parse(listFoto.value) || [];
 
-    if(!this.platform.is('hybrid'))
+    if (!this.platform.is('hybrid')) 
     {
-      for(let foto of this.dataFoto)
+      for(let foto of this.dataFoto) 
       {
         const readFile = await Filesystem.readFile({
-          path : foto.filePath,
+          path: foto.filePath,
           directory : FilesystemDirectory.Data
         });
+        foto.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
 
-        foto.webviewPath = `data:image/jpeg:base64,${readFile.data}`;
+        const response = await fetch(foto.webviewPath);
+        const blob = await response.blob();
+
+        foto.dataImage = new File([blob], foto.filePath, {
+          type: "image/jpeg"
+        });
       }
     }
-
-    
+    console.log(this.dataFoto);
   }
 }
 
-
-
-export interface Photo{
+export interface Photo 
+{
   filePath : string;
   webviewPath : string;
+  dataImage : File;
 }

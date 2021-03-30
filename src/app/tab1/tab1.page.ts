@@ -17,7 +17,7 @@ export class Tab1Page {
 
   foto()
   {
-    this.fotoService.tambahfoto();
+    this.fotoService.tambahFoto();
   }
 
 
